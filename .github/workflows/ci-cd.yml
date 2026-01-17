@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  ci-cd:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,14 +26,5 @@ jobs:
       - name: Build Docker image
         run: docker build -t cicd-demo .
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            docker stop cicd-demo || true
-            docker rm cicd-demo || true
-            docker build -t cicd-demo .
-            docker run -d -p 3000:3000 --name cicd-demo cicd-demo
+      - name: Trigger Render Deploy
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
