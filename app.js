@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.json({ message: "New CI/CD pipeline 🚀" });
+  res.json({ message: "This is my new CI/CD pipeline 🚀" });
 });
 
 module.exports = app;
