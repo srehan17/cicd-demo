@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "connectionString": "postgresql://postgres:postgres@localhost:5432/cicd_demo"
+    },
+    "production": {
+        "connectionString": {
+            "ENV": "DATABASE_URL"
+        }
+    }
+}
