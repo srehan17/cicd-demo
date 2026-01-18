@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 const express = require('express');
 const { Pool } = require('pg');
 
@@ -17,7 +20,80 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/projects', async (req, res) => {
+// Register
+app.post('/api/auth/register', async (req, res) => {
+  const { email, name, password } = req.body;
+
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO users (email, name, password_hash)
+      VALUES ($1, $2, $3)
+      RETURNING id, email, name, role
+      `,
+      [email, name, passwordHash]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+    res.status(500).json({ error: 'Failed to register' });
+  }
+});
+
+// Login
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const result = await pool.query(
+    'SELECT * FROM users WHERE email = $1',
+    [email]
+  );
+
+  const user = result.rows[0];
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+
+  res.json({ token });
+});
+
+// middleware
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.sendStatus(401);
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch {
+    res.sendStatus(401);
+  }
+}
+
+app.get('/api/projects', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `
@@ -34,7 +110,7 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 
-app.post('/api/projects', async (req, res) => {
+app.post('/api/projects', requireAuth, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -54,7 +130,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-app.get('/api/projects/:id/documents', async (req, res) => {
+app.get('/api/projects/:id/documents', requireAuth, async (req, res) => {
   try {
     const projectId = req.params.id;
 
@@ -76,7 +152,7 @@ app.get('/api/projects/:id/documents', async (req, res) => {
   }
 });
 
-app.post('/api/projects/:id/documents', async (req, res) => {
+app.post('/api/projects/:id/documents', requireAuth, async (req, res) => {
   try {
     const projectId = req.params.id;
     const { title } = req.body;
@@ -106,7 +182,7 @@ app.post('/api/projects/:id/documents', async (req, res) => {
   }
 });
 
-app.delete('/api/projects/:id', async (req, res) => {
+app.delete('/api/projects/:id', requireAuth, async (req, res) => {
   try {
     const projectId = req.params.id;
 
@@ -126,7 +202,7 @@ app.delete('/api/projects/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/documents/:id', async (req, res) => {
+app.delete('/api/documents/:id', requireAuth, async (req, res) => {
   try {
     const documentId = req.params.id;
 
