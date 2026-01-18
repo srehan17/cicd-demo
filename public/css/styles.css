@@ -1,0 +1,31 @@
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: 40px auto;
+}
+
+input,
+button {
+  padding: 8px;
+  margin: 4px 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  padding: 6px;
+  cursor: pointer;
+}
+
+li:hover {
+  background: #f0f0f0;
+}
+
+/* Selected project highlight */
+.selected-project {
+  background-color: #dbeafe;
+  font-weight: bold;
+}
