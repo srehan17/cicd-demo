@@ -15,8 +15,8 @@
 
 <h2 id="docHeader" style="display:none;">Documents</h2>
 
-<input id="docTitle" placeholder="New document title" />
-<button onclick="addDocument()">Add Document</button>
+<input id="docTitle" placeholder="New document title" disabled />
+<button id="addDocBtn" onclick="addDocument()" disabled>Add Document</button>
 
 <ul id="documents"></ul>
 
@@ -57,6 +57,8 @@ async function loadProjects() {
 function selectProject(id) {
   selectedProject = Number(id);
   document.getElementById('docHeader').style.display = 'block';
+  document.getElementById('docTitle').disabled = false;
+  document.getElementById('addDocBtn').disabled = false;
   loadProjects();
   loadDocuments();
 }
