@@ -6,6 +6,16 @@
 </head>
 <body>
 
+<div id="register">
+  <h3>Register</h3>
+  <input id="regName" placeholder="Name" />
+  <input id="regEmail" placeholder="Email" />
+  <input id="regPassword" type="password" placeholder="Password" />
+  <button onclick="register()">Register</button>
+</div>
+
+<hr />
+
 <div id="auth">
   <input id="email" placeholder="Email" />
   <input id="password" type="password" placeholder="Password" />
@@ -31,6 +41,26 @@
 <script>
 
 let selectedProject = null;
+
+async function register() {
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password })
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    alert(data.error || 'Registration failed');
+    return;
+  }
+
+  alert('Registration successful. You can now log in.');
+}
 
 async function login() {
   const email = document.getElementById('email').value;
