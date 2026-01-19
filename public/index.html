@@ -16,12 +16,34 @@
 
 <hr />
 
-<div id="auth">
-  <input id="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <button onclick="login()">Login</button>
-  <button onclick="logout()">Logout</button>
+<div id="auth-container">
+
+  <!-- REGISTER -->
+  <div id="register-section">
+    <h3>Register</h3>
+    <input id="regName" placeholder="Name" />
+    <input id="regEmail" placeholder="Email" />
+    <input id="regPassword" type="password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+  </div>
+
+  <hr />
+
+  <!-- LOGIN -->
+  <div id="login-section">
+    <h3>Login</h3>
+    <input id="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- LOGOUT -->
+  <div id="logout-section" style="display:none;">
+    <button onclick="logout()">Logout</button>
+  </div>
+
 </div>
+
 <hr />
 
 <h1>Projects</h1>
@@ -42,6 +64,26 @@
 
 let selectedProject = null;
 
+function updateAuthUI() {
+  const token = localStorage.getItem('token');
+
+  const registerSection = document.getElementById('register-section');
+  const loginSection = document.getElementById('login-section');
+  const logoutSection = document.getElementById('logout-section');
+
+  if (token) {
+    // Logged in
+    registerSection.style.display = 'none';
+    loginSection.style.display = 'none';
+    logoutSection.style.display = 'block';
+  } else {
+    // Logged out
+    registerSection.style.display = 'block';
+    loginSection.style.display = 'block';
+    logoutSection.style.display = 'none';
+  }
+}
+
 async function register() {
   const name = document.getElementById('regName').value;
   const email = document.getElementById('regEmail').value;
@@ -60,6 +102,7 @@ async function register() {
   }
 
   alert('Registration successful. You can now log in.');
+  updateAuthUI();
 }
 
 async function login() {
@@ -80,6 +123,7 @@ async function login() {
   const data = await res.json();
   localStorage.setItem('token', data.token);
 
+  updateAuthUI();
   loadProjects();
 }
 
@@ -88,6 +132,21 @@ function authHeaders() {
   return token
     ? { Authorization: `Bearer ${token}` }
     : {};
+}
+
+function logout() {
+  localStorage.removeItem('token');
+
+  selectedProject = null;
+  document.getElementById('projects').innerHTML = '';
+  document.getElementById('documents').innerHTML = '';
+  document.getElementById('docHeader').style.display = 'none';
+
+  updateAuthUI();
+}
+
+function isLoggedIn() {
+  return !!localStorage.getItem('token');
 }
 
 async function loadProjects() {
@@ -145,6 +204,7 @@ async function loadDocuments() {
 }
 
 async function addProject() {
+  if (!isLoggedIn()) return;
   const name = document.getElementById('projectName').value;
   await fetch('/api/projects', {
     method: 'POST',
@@ -206,16 +266,10 @@ async function deleteDocument(documentId) {
   loadDocuments();
 }
 
-function logout() {
-  localStorage.removeItem('token');
-  location.reload();
-}
+updateAuthUI();
 
 if (localStorage.getItem('token')) {
   loadProjects();
-}
-else {
-    alert('Please log in');
 }
 </script>
 
