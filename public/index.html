@@ -140,7 +140,9 @@ function isLoggedIn() {
 }
 
 async function loadProjects() {
-  const res = await fetch('/api/projects');
+  const res = await fetch('/api/projects', {
+    headers: authHeaders()
+  });
   const projects = await res.json();
 
   const ul = document.getElementById('projects');
@@ -256,11 +258,12 @@ async function deleteDocument(documentId) {
   loadDocuments();
 }
 
-updateAuthUI();
-
-if (localStorage.getItem('token')) {
-  loadProjects();
-}
+document.addEventListener('DOMContentLoaded', () => {
+  updateAuthUI();
+  if (isLoggedIn()) {
+    loadProjects();
+  }
+});
 </script>
 
 </body>
