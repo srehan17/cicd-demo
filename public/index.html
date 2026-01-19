@@ -181,7 +181,7 @@ function selectProject(id) {
 }
 
 async function loadDocuments() {
-  const res = await fetch(`/api/projects/${selectedProject}/documents`);
+  const res = await fetch(`/api/projects/${selectedProject}/documents`, { headers: authHeaders()});
   const docs = await res.json();
   const ul = document.getElementById('documents');
   ul.innerHTML = '';
